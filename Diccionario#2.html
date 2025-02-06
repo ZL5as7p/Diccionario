@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Font Awesome -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        />
+        <!-- Google Fonts -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Poppins&display=swap"
+            rel="stylesheet"
+        />
+        <!-- Stylesheet -->
+        <link rel="stylesheet" href="style.css" />
+        <title>Dictionary</title>
+    </head>
+    <body>
+        <h1> Dictionary Web Application</h1>
+        <audio id="sound"></audio>
+        <div class="container">
+            <div class="search-box">
+                <input
+                    type="text"
+                    placeholder=" Type the word here.."
+                    id="inp-word"
+                />
+                <button id="search-btn">Search</button>
+            </div>
+            <div class="result" id="result"></div>
+        </div>
+        <!-- Script -->
+        <script src="script.js"></script>
+    </body>
+    <style>
+        * {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+*:not(i) {
+    font-family: "Poppins", sans-serif;
+}
+h1{
+    margin-top: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #EF0D50;
+    text-align: center;
+    font-size: 40px;
+}
+body {
+    background-color: #E1F2F7;
+   
+}
+.container {
+    background-color: #ffffff;
+    width: 90vmin;
+
+    position: absolute;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    padding: 80px 80px;
+    border-radius: 10px;
+    box-shadow: 0 20px 40px rgb(79, 214, 244);
+    flex: display;
+    align-items: center;
+    justify-content: center;
+
+}
+.search-box {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+.search-box input {
+    padding: 5px;
+    width: 70%;
+    border: none;
+    outline: none;
+    border-bottom: 3px dashed #EF0D50;
+    font-size: 16px;
+    flex: display;
+    align-items: center;
+    justify-content: center;
+}
+.search-box button {
+    padding: 15px 0;
+    width: 25%;
+    background-color: #EF0D50;
+    border: 3.5px dashed black; /* Added black dashed border */
+    outline: none;
+    color: #ffffff;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 7px 7px rgb(99, 118, 123);
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s; /* Smooth transition for border */
+}
+
+.search-box button:hover {
+    background-color: rgb(79, 214, 244);
+    color: #000000;
+    border-color: white; 
+    box-shadow: 0 7px 7px rgb(99, 118, 123);
+}
+
+.result {
+    position: relative;
+    flex: display;
+    align-items: center;
+    justify-content: center;
+}
+.result h3 {
+    font-size: 30px;
+    color: #1f194c;
+    flex: display;
+    align-items: center;
+    justify-content: center;
+}
+.result .word {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 80px;
+    align-items: center;
+   
+}
+.result button {
+    background-color: transparent;
+    color: #EF0D50;
+    border: none;
+    outline: none;
+    font-size: 18px;
+    flex: display;
+    align-items: center;
+    justify-content: center;
+}
+.result .details {
+    display: flex;
+    gap: 10px;
+    color: #b3b6d4;
+    margin: 5px 0 20px 0;
+    font-size: 14px;
+    
+}
+.word-meaning {
+    color: #575a7b;
+}
+.word-example {
+    color: #575a7b;
+    font-style: italic;
+    border-left: 5px solid #EF0D50;
+    padding-left: 20px;
+    margin-top: 30px;
+    flex: display;
+    align-items: center;
+    justify-content: center;
+}
+.error {
+    margin-top: 80px;
+    text-align: center;
+    flex: display;
+    align-items: center;
+    justify-content: center;
+}
+    </style>
+    <script>
+        const url = "https://api.dictionaryapi.dev/api/v2/entries/en/";
+const result = document.getElementById("result");
+const sound = document.getElementById("sound");
+const btn = document.getElementById("search-btn");
+
+btn.addEventListener("click", () => {
+    let inpWord = document.getElementById("inp-word").value.trim();
+    if (!inpWord) return; // Avoid empty input
+
+    fetch(`${url}${inpWord}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.title === "No Definitions Found") {
+                result.innerHTML = `<h3 class="error">Couldn't Find The Word</h3>`;
+                return;
+            }
+
+            const phonetics = data[0].phonetics.find(p => p.audio); // Find a phonetic with audio
+            if (phonetics) {
+                sound.setAttribute("src", phonetics.audio);
+            } else {
+                sound.removeAttribute("src");
+            }
+
+            result.innerHTML = `
+            <div class="word">
+                <h3>${inpWord}</h3>
+                <button id="play-sound">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+            </div>
+            <div class="details">
+                <p>${data[0].meanings[0].partOfSpeech}</p>
+                <p>/${data[0].phonetic || ''}/</p>
+            </div>
+            <p class="word-meaning">
+                ${data[0].meanings[0].definitions[0].definition}
+            </p>
+            <p class="word-example">
+                ${data[0].meanings[0].definitions[0].example || ""}
+            </p>`;
+
+            document.getElementById("play-sound").addEventListener("click", playSound);
+        })
+        .catch(() => {
+            result.innerHTML = `<h3 class="error">Couldn't Find The Word</h3>`;
+        });
+});
+
+function playSound() {
+    if (sound.src) {
+        sound.play();
+    } else {
+        alert("No audio available for this word.");
+    }
+}
+    </script>
+</html>
